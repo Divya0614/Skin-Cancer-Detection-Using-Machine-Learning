@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <link rel='stylesheet' type='text/css' media='screen' href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='logo.png') }}" type="image/x-icon">
+    <title>Skin Cancer Prediction - HealthCare</title>
+    <style>
+        header {
+            background-color: rgb(156, 246, 0);
+            padding: 30px 50px 30px 25px;
+            font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+            text-align: left;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 15px;
+            background-color: rgb(98, 112, 107);
+            border-radius: 15px;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+        .form {
+            background: #ffeba8;
+            max-width: 360px;
+            margin: 0 auto 20px;
+            padding: 20px;
+            opacity: 0.9;
+            border-radius: 10px;
+        }
+        .form input, .form select {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            background: #1d1c1c;
+            color: white;
+            font-size: 14px;
+        }
+        .submit {
+            background: #ff6f00;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .footer {
+            background-color: rgb(246, 111, 0);
+            padding: 25px;
+            text-align: center;
+            color: white;
+        }
+        .history-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        .history-item img {
+            max-width: 100px;
+            margin-right: 10px;
+        }
+        .result {
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>HealthCare Hospital</h1>
+    </header>
+
+    <main>
+        <div class="container">
+            <h1 style="text-align: center; font-weight: 1000">Skin Cancer Prediction</h1>
+            <div class="form">
+                <form action="/classify" method="POST" enctype="multipart/form-data">
+                    <input type="file" name="image" accept="image/*" required>
+                    <input type="email" name="email" placeholder="Enter email for alerts" required>
+                    <label>Brightness:</label>
+                    <input type="range" name="brightness" min="0.5" max="1.5" step="0.1" value="1.0">
+                    <label>Contrast:</label>
+                    <input type="range" name="contrast" min="0.5" max="1.5" step="0.1" value="1.0">
+                    <input type="submit" value="Classify" class="submit">
+                </form>
+            </div>
+
+            {% if pred %}
+            <div class="result">
+                <h2 style="color: {% if pred == 'Malignant' %}red{% else %}green{% endif %}">{{ pred }}</h2>
+                <p>Confidence: {{ confidence }}</p>
+                {% if image_data %}
+                <img src="data:image/jpeg;base64,{{ image_data }}" alt="Uploaded Image" style="max-width: 300px;">
+                {% endif %}
+                {% if prescription_path %}
+                <a href="{{ url_for('download_prescription', filename=prescription_path) }}" 
+                   style="display: block; margin: 10px auto; text-align: center; color: #ff6f00; text-decoration: none;">
+                    Download Prescription
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <h2 style="text-align: center;">Prediction History (Last 5)</h2>
+            {% for item in history %}
+            <div class="history-item">
+                <img src="{{ url_for('static', filename=item.image_path.split('static/')[1]) }}" alt="History Image">
+                <span>{{ item.result }} ({{ item.confidence }}) - {{ item.timestamp }}</span>
+                <a href="{{ url_for('download_prescription', filename=item.prescription_path) }}" 
+                   style="color: #ff6f00; margin-left: 10px;">Prescription</a>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <div class="footer">
+        <h3>HealthCare Project</h3>
+        <h4>CAPSTONE Project</h4>
+        <p>@2025</p>
+    </div>
+
+    {% if sound_alert %}
+    <script>
+        var audio = new Audio('{{ url_for('static', filename='alert.mp3') }}');
+        audio.play();
+        alert("Malignant detected! Please consult a doctor immediately.");
+    </script>
+    {% endif %}
+</body>
+</html>
